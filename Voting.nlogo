@@ -1,4 +1,4 @@
-globals[poll result parties nr-parties count-max one-vote percent-to-win] ;; polls is the result of previous election
+globals[poll result parties nr-parties count-max one-vote percent-to-win winner switch] ;; polls is the result of previous election
 
 patches-own
 [
@@ -12,8 +12,8 @@ patches-own
 to setup
   clear-all
 
-  set parties [0 1 2 3 4 5 6]
-  set result  [0 0 0 0 0 0 0]
+  set parties [0 1 2 3 4]
+  set result  [0 0 0 0 0]
   set poll result
   set nr-parties length parties
   set count-max 2 ;;after voting count-max on a party that is not its preference its preference changes
@@ -22,12 +22,12 @@ to setup
   set percent-to-win 1 / nr-parties ;;all have equal chance to win according to polls
 
 
-
   ask patches
     [
       set like random nr-parties
 
       set vote like
+
       set previous-vote like
       recolor-patch ]
   reset-ticks
@@ -37,75 +37,88 @@ to go
   ;;grabs our poll data from the latest voting
   set poll result
 
-  set result [0 0 0 0 0 0 0]
+  set result [0 0 0 0 0]
+
+  set switch 0
 
   ask patches [
     go-vote
   ]
 
-  ask patches [
-    if counter >= count-max [
-      set like vote
-    ]
-    recolor-patch
-  ]
+  show switch
+
 
   set percent-to-win max result
+  set winner position percent-to-win result
 
+  ask patches [
+    recolor-patch
+  ]
   tick
+end
+
+to-report other-alive
+
+  let change one-of parties
+  let counting 0
+
+  if item change result = 0 and counting < 10 [
+    set change one-of parties
+    set counting counting + 1
+  ]
+
+  report change
 end
 
 to go-vote ;; patch procedure
 
-  let vote-max -1 ;;set to minus 1 so it will always be replaced
+  let l 0
+  let r 0
 
-  foreach parties [ [i] ->
-    ;; getting our preference
-    let m get-like i
+  ;;defining l and r as left and right of the current vote
+  ifelse vote - 1 >= 0         [set l vote - 1] [set l vote]
+  ifelse vote + 1 < nr-parties [set r vote + 1] [set r vote]
 
-    ;;get the poll result for the party
-    let p item i poll
+  let my-vote vote
 
-    let current voting-chance m p
+  ;;chance of switching if
+  ifelse abs(item my-vote poll - percent-to-win) > 0.1 or random-float 1 < 0.25[
 
-    if current > vote-max [
-      ;;if we found stronger preference, switch to that one
-      set vote-max current
-      set vote i
+    ifelse my-vote = winner and random-float 1 < 0.1 [
+      set my-vote other-alive
+    ]
+    [
+      set switch switch + 1
+      if item l poll > item r poll[
+        set my-vote l
+      ]
+
+      if item l poll < item r poll[
+        set my-vote r
+      ]
+
+      if item l poll = item r poll[
+        ifelse random-float 1 <= 0.5 [
+          set my-vote l
+        ]
+        [
+          set my-vote r
+        ]
+      ]
+    ]
+  ]
+  [
+    if random-float 1 < 0.1 [
+      set my-vote other-alive
     ]
   ]
 
-  ;;thinks about changing its alligence long-term
-  ;;ifelse vote = like [set counter 0] [set counter counter + 1]
 
-  let add-to one-vote + item vote result
+  set vote my-vote
 
+  let new-vote-total one-vote + item my-vote result
   ;; adds one vote to the party it voted for
-  set result replace-item vote result add-to
-end
-
-to-report voting-chance [likeable poll-result]
-  let return 0
-
-  ifelse likeable < 1 or poll-result < .5 [
-    set return exp(-((poll-result - percent-to-win) ^ 2) / (0.32 * percent-to-win / 0.5))
-  ]
-  [
-    set return 1
-  ]
-
-  let chance .5 + random-float .5
-
-  report return * likeable * chance
-
-end
-
-to-report get-like [party-index];; patch procedure
-  report 1 - 2 * (abs (like - party-index) / length parties)
-end
-
-to-report get-like2 [me party-index];; patch procedure
-  report 1 - 2 * (abs (me - party-index) / length parties)
+  set result replace-item vote result new-vote-total
 end
 
 to recolor-patch  ;; patch procedure
@@ -233,7 +246,7 @@ plot 1
 NIL
 NIL
 0.0
-7.0
+5.0
 0.0
 22500.0
 true
