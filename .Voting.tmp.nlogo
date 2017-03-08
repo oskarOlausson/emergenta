@@ -35,8 +35,9 @@ end
 
 to-report get-gap [input]
   let win_per max input
+  let win_item position win_per input
 
-  let arr replace-item (position win_per input) input 0
+  let arr replace-item  input 0
 
   set gap win_per - max arr
 
@@ -256,7 +257,7 @@ switch-even-though-close
 switch-even-though-close
 0
 100
-10.0
+0.0
 1
 1
 %
@@ -271,7 +272,7 @@ switch-if-very-likely-to-win
 switch-if-very-likely-to-win
 0
 100
-10.0
+100.0
 1
 1
 %
@@ -301,7 +302,7 @@ considered-close
 considered-close
 0
 100
-6.0
+0.0
 1
 1
 %
