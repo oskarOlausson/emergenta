@@ -12,8 +12,8 @@ patches-own
 to setup
   clear-all
 
-  set parties [0 1 2 3 4]
-  set result  [0 0 0 0 0]
+  set parties [0 1 2 3 4 5 6]
+  set result  [0 0 0 0 0 0 0]
   set poll result
   set nr-parties length parties
   set count-max 2 ;;after voting count-max on a party that is not its preference its preference changes
@@ -47,7 +47,7 @@ to go
   ;;grabs our poll data from the latest voting
   set poll result
 
-  set result [0 0 0 0 0]
+  set result [0 0 0 0 0 0 0]
 
   set debug 0
 
@@ -238,7 +238,7 @@ plot 1
 NIL
 NIL
 0.0
-5.0
+7.0
 0.0
 22500.0
 true
@@ -271,7 +271,7 @@ switch-if-very-likely-to-win
 switch-if-very-likely-to-win
 0
 100
-10.0
+5.0
 1
 1
 %
@@ -286,7 +286,7 @@ chance-of-switching-randomly
 chance-of-switching-randomly
 0
 100
-0.0
+2.0
 1
 1
 %
@@ -306,6 +306,24 @@ considered-close
 1
 %
 HORIZONTAL
+
+PLOT
+732
+307
+932
+457
+Partywinner
+NIL
+NIL
+0.0
+5.0
+-1.0
+7.0
+true
+false
+"" ""
+PENS
+"default" 1.0 2 -16777216 true "" "plot winner"
 
 @#$#@#$#@
 ## WHAT IS IT?
