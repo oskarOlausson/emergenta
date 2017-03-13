@@ -1,4 +1,4 @@
-globals[poll result parties nr-parties count-max one-vote percent-to-win winner debug gap] ;; polls is the result of previous election
+globals[history poll result parties nr-parties count-max one-vote percent-to-win winner runner-up pwinner prunner-up gap same-two-counter] ;; polls is the result of previous election
 
 patches-own
 [
@@ -14,6 +14,8 @@ to setup
 
   set parties [0 1 2 3 4 5 6]
   set result  [0 0 0 0 0 0 0]
+  set history [0 0 0 0 0 0 0]
+
   set poll result
   set nr-parties length parties
   set count-max 2 ;;after voting count-max on a party that is not its preference its preference changes
@@ -24,9 +26,7 @@ to setup
 
   ask patches
     [
-      set like random nr-parties
-
-      set vote like
+      set vote random nr-parties
 
       set previous-vote like
       recolor-patch ]
@@ -43,25 +43,44 @@ to-report get-gap [input]
   report gap
 end
 
+to-report get-second-biggest [input]
+
+  let arr replace-item (position (max input) input) input 0
+
+  report position max arr arr
+end
+
 to go
   ;;grabs our poll data from the latest voting
   set poll result
 
   set result [0 0 0 0 0 0 0]
 
-  set debug 0
 
   ask patches [
     go-vote
   ]
 
-  show debug
-
 
   set percent-to-win max result
+
+  set pwinner winner
+  set prunner-up runner-up
+
+  ;;gets the position of the two biggest
   set winner position percent-to-win result
+  set runner-up get-second-biggest result
+
+  ifelse (winner = pwinner and runner-up = prunner-up) or (winner = prunner-up and runner-up = pwinner) [
+    set same-two-counter same-two-counter + 1
+  ][
+    set same-two-counter 0
+  ]
 
   set gap get-gap result
+
+  let new-value 1 + item winner history
+  set history replace-item winner history new-value
 
 
   ask patches [
@@ -94,43 +113,35 @@ to go-vote ;; patch procedure
 
   let my-vote vote
 
-    if pxcor = 1 and pycor = 1 [
-      show abs(item my-vote poll - percent-to-win)
-    ]
-
-    ifelse my-vote = winner and gap > percent considered-close and random-float 1 < percent switch-if-very-likely-to-win [
+  ifelse my-vote = winner and gap > percent considered-close and random-float 1 < percent switch-if-very-likely-to-win [
       set my-vote other-alive vote
-      set debug debug + 1
-    ]
-    [
-      ;chance of voting if the vote is not close
-      if abs(item my-vote poll - percent-to-win) > percent considered-close or random-float 1 < percent switch-even-though-close [
-        ;;change vote to bigger party
-        if item l poll > item r poll and l != winner[
-          set my-vote l
-        ]
+  ]
+  [
+    ;chance of voting if the vote is not close
+    if abs(item my-vote poll - percent-to-win) > percent considered-close or random-float 1 < percent switch-even-though-close [
+      ;;change vote to bigger party
+      if item l poll > item r poll and l != winner[
+        set my-vote l
+      ]
 
-        if item l poll < item r poll and r != winner[
+      if item l poll < item r poll and r != winner[
+        set my-vote r
+      ]
+
+      if item l poll = item r poll and l != winner and r != winner[
+        ifelse random-float 1 <= 0.5 [
+          set my-vote l
+        ][
           set my-vote r
         ]
-
-        if item l poll = item r poll and l != winner and r != winner[
-          ifelse random-float 1 <= 0.5 [
-            set my-vote l
-          ][
-            set my-vote r
-          ]
-        ]
       ]
+    ]
   ]
 
 
   if random-float 1 < percent chance-of-switching-randomly [
     set my-vote other-alive vote
   ]
-
-
-
 
   set vote my-vote
 
@@ -147,6 +158,9 @@ to-report percent [percent-to-dec]
   report percent-to-dec / 100
 end
 
+to-report is-two-party-system
+  report same-two-counter > 10
+end
 
 ; Copyright 1998 Uri Wilensky.
 ; See Info tab for full copyright and license.
@@ -230,10 +244,10 @@ NIL
 0
 
 PLOT
-730
-102
-930
-252
+731
+11
+931
+161
 plot 1
 NIL
 NIL
@@ -256,7 +270,7 @@ switch-even-though-close
 switch-even-though-close
 0
 100
-10.0
+20.0
 1
 1
 %
@@ -271,7 +285,7 @@ switch-if-very-likely-to-win
 switch-if-very-likely-to-win
 0
 100
-5.0
+20.0
 1
 1
 %
@@ -301,29 +315,11 @@ considered-close
 considered-close
 0
 100
-6.0
+20.0
 1
 1
 %
 HORIZONTAL
-
-PLOT
-732
-307
-932
-457
-Partywinner
-NIL
-NIL
-0.0
-5.0
--1.0
-7.0
-true
-false
-"" ""
-PENS
-"default" 1.0 2 -16777216 true "" "plot winner"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -680,6 +676,121 @@ NetLogo 6.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="Test1" repetitions="100" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <exitCondition>is-two-party-system</exitCondition>
+    <metric>is-two-party-system</metric>
+    <enumeratedValueSet variable="considered-close">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="switch-if-very-likely-to-win">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="switch-even-though-close">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="chance-of-switching-randomly">
+      <value value="2"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Test2" repetitions="100" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <exitCondition>is-two-party-system</exitCondition>
+    <enumeratedValueSet variable="considered-close">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="switch-if-very-likely-to-win">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="switch-even-though-close">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="chance-of-switching-randomly">
+      <value value="2"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Test3" repetitions="100" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>item 0 history</metric>
+    <metric>item 1 history</metric>
+    <metric>item 2 history</metric>
+    <metric>item 3 history</metric>
+    <metric>item 4 history</metric>
+    <metric>item 5 history</metric>
+    <metric>item 6 history</metric>
+    <enumeratedValueSet variable="considered-close">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="switch-if-very-likely-to-win">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="switch-even-though-close">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="chance-of-switching-randomly">
+      <value value="2"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Test4" repetitions="10" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>item 0 history</metric>
+    <metric>item 1 history</metric>
+    <metric>item 2 history</metric>
+    <metric>item 3 history</metric>
+    <metric>item 4 history</metric>
+    <metric>item 5 history</metric>
+    <metric>item 6 history</metric>
+    <enumeratedValueSet variable="considered-close">
+      <value value="0"/>
+      <value value="510"/>
+      <value value="10"/>
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="switch-if-very-likely-to-win">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="switch-even-though-close">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="chance-of-switching-randomly">
+      <value value="2"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Test5" repetitions="10" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <exitCondition>is-two-party-system</exitCondition>
+    <metric>is-two-party-system</metric>
+    <enumeratedValueSet variable="considered-close">
+      <value value="5"/>
+      <value value="10"/>
+      <value value="20"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="switch-if-very-likely-to-win">
+      <value value="5"/>
+      <value value="10"/>
+      <value value="20"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="switch-even-though-close">
+      <value value="5"/>
+      <value value="10"/>
+      <value value="20"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="chance-of-switching-randomly">
+      <value value="2"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
