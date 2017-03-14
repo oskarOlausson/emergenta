@@ -133,7 +133,7 @@ to go-vote ;; patch procedure
       ]
 
       if item l poll = item r poll and l != winner and r != winner[
-        ifelse random 2 == 0 [
+        ifelse random 2 = 0 [
           set my-vote l
         ][
           set my-vote r
@@ -319,7 +319,7 @@ considered-close
 considered-close
 0
 100
-10.0
+30.0
 1
 1
 %
@@ -755,7 +755,7 @@ NetLogo 6.0
     <metric>item 6 history</metric>
     <enumeratedValueSet variable="considered-close">
       <value value="0"/>
-      <value value="510"/>
+      <value value="5"/>
       <value value="10"/>
       <value value="30"/>
     </enumeratedValueSet>
