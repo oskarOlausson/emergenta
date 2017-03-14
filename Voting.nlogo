@@ -23,6 +23,10 @@ to setup
   set one-vote (1 / count patches)
   set percent-to-win 1 / nr-parties ;;all have equal chance to win according to polls
 
+  set winner -1
+  set runner-up -1
+  set same-two-counter 0
+
 
   ask patches
     [
@@ -129,7 +133,7 @@ to go-vote ;; patch procedure
       ]
 
       if item l poll = item r poll and l != winner and r != winner[
-        ifelse random-float 1 <= 0.5 [
+        ifelse random 2 == 0 [
           set my-vote l
         ][
           set my-vote r
@@ -270,7 +274,7 @@ switch-even-though-close
 switch-even-though-close
 0
 100
-20.0
+10.0
 1
 1
 %
@@ -285,7 +289,7 @@ switch-if-very-likely-to-win
 switch-if-very-likely-to-win
 0
 100
-20.0
+10.0
 1
 1
 %
@@ -315,7 +319,7 @@ considered-close
 considered-close
 0
 100
-20.0
+10.0
 1
 1
 %
