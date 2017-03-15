@@ -32,7 +32,7 @@ to setup
     [
       set vote random nr-parties
 
-      set previous-vote like
+      set previous-vote vote
       recolor-patch ]
   reset-ticks
 end
@@ -319,7 +319,7 @@ considered-close
 considered-close
 0
 100
-30.0
+10.0
 1
 1
 %
@@ -789,6 +789,26 @@ NetLogo 6.0
       <value value="5"/>
       <value value="10"/>
       <value value="20"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="chance-of-switching-randomly">
+      <value value="2"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Test6" repetitions="1000" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <exitCondition>is-two-party-system</exitCondition>
+    <metric>winner</metric>
+    <metric>runner-up</metric>
+    <enumeratedValueSet variable="considered-close">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="switch-if-very-likely-to-win">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="switch-even-though-close">
+      <value value="10"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="chance-of-switching-randomly">
       <value value="2"/>
